@@ -1,0 +1,282 @@
+<h2>Gestión de Editoriales</h2>
+
+<button class="btn-nuevo" (click)="mostrarModal = true">Nueva Editorial</button>
+
+<div class="modal" *ngIf="mostrarModal">
+  <div class="modal-content modal-material">
+    <h3 class="modal-title">Agregar Editorial</h3>
+    <span class="close" (click)="mostrarModal = false">&times;</span>
+    <form (ngSubmit)="agregar(); mostrarModal = false" class="form-editorial-modal">
+      <div class="form-row">
+        <input [(ngModel)]="nuevaEditorial().nombre" name="nombre" placeholder="Nombre" required />
+      </div>  
+      <div class="form-row">  
+        <input [(ngModel)]="nuevaEditorial().ciudad" name="ciudad" placeholder="Ciudad" required />
+      </div>
+      <div class="form-row form-row-right">
+        <button class="btn-guardar" type="submit">Guardar</button>
+        <button class="btn-cancelar" type="button" (click)="mostrarModal = false">Cancelar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<ul class="lista-editoriales">
+  @for (editorial of editoriales(); track editorial.id) {
+    <li class="editorial-card">
+      <div class="editorial-info">
+        <strong>{{ editorial.nombre }}</strong> <span class="ciudad">({{ editorial.ciudad }})</span>
+      </div>
+      <div class="editorial-actions">
+        <button class="btn-editar" (click)="iniciarEdicion(editorial)">Editar</button>
+        <button class="btn-eliminar" (click)="eliminar(editorial.id!)">Eliminar</button>
+      </div>
+    </li>
+  } @empty {
+    <li class="sin-editoriales">No hay editoriales cargadas.</li>
+  }
+</ul>
+
+<div class="modal" *ngIf="editando !== null">
+  <div class="modal-content modal-material">
+    <h3 class="modal-title">Editar Editorial</h3>
+    <span class="close" (click)="cancelarEdicion()">&times;</span>
+    <form (ngSubmit)="guardarEdicion(); cancelarEdicion()" class="form-editorial-modal">
+      <div class="form-row">
+        <input [(ngModel)]="editEditorial().nombre" name="editNombre" placeholder="Nombre" required />
+      </div>
+       <div class="form-row"> 
+        <input [(ngModel)]="editEditorial().ciudad" name="editCiudad" placeholder="Ciudad" required />
+       </div>
+      <div class="form-row form-row-right">
+        <button class="btn-guardar" type="submit">Guardar</button>
+        <button class="btn-cancelar" type="button" (click)="cancelarEdicion()">Cancelar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal" *ngIf="confirmarEliminarId !== null">
+  <div class="modal-content modal-material">
+    <h3 class="modal-title">¿Confirmar eliminación?</h3>
+    <p>¿Estás seguro de que deseas eliminar esta editorial?</p>
+    <div class="form-row form-row-right">
+      <button class="btn-eliminar" (click)="confirmarEliminar()">Sí, eliminar</button>
+      <button class="btn-cancelar" (click)="cancelarEliminar()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<style>
+.btn-nuevo {
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  padding: 0.6rem 1.3rem;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 500;
+  margin-bottom: 1.2rem;
+  font-size: 1.1rem;
+  transition: background 0.2s;
+  box-shadow: 0 2px 8px rgba(33,150,243,0.13);
+}
+.btn-nuevo:hover {
+  background: #125ea2;
+}
+.modal {
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: auto;
+  background: rgba(33, 150, 243, 0.13);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.modal-content.modal-material {
+  background: #fff;
+  margin: auto;
+  padding: 2rem 1.5rem 1.5rem 1.5rem;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 8px 32px rgba(33,150,243,0.18), 0 1.5px 6px rgba(33,150,243,0.10);
+  position: relative;
+  border-top: 6px solid #1976d2;
+}
+.modal-title {
+  margin-top: 0;
+  margin-bottom: 1.2rem;
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: #1976d2;
+  text-align: center;
+  letter-spacing: 0.5px;
+}
+.close {
+  color: #888;
+  position: absolute;
+  top: 1rem;
+  right: 1.2rem;
+  font-size: 2rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.close:hover {
+  color: #e53935;
+}
+.form-editorial-modal {
+  background: #f8fafd;
+  padding: 1.2rem 1rem 1rem 1rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(33,150,243,0.07);
+}
+.form-row-right {
+  justify-content: flex-end;
+}
+.form-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 0.7rem;
+}
+.form-editorial-modal input {
+  padding: 0.7rem 1rem;
+  border: 1.5px solid #bdbdbd;
+  border-radius: 8px;
+  font-size: 1.08rem;
+  flex: 1;
+  background: #f9f9fb;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+  box-shadow: 0 1px 2px rgba(33,150,243,0.04);
+}
+.form-editorial-modal input:focus {
+  border-color: #1976d2;
+  background: #fff;
+  box-shadow: 0 0 0 2px #1976d233;
+}
+.btn-guardar {
+  background: #43a047;
+  color: #fff;
+  border: none;
+  padding: 0.3rem 0.9rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: background 0.2s;
+  margin-right: 0.3rem;
+}
+.btn-guardar:hover {
+  background: #2e7031;
+}
+.btn-cancelar {
+  background: #bdbdbd;
+  color: #333;
+  border: none;
+  padding: 0.3rem 0.9rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: background 0.2s;
+}
+.btn-cancelar:hover {
+  background: #757575;
+  color: #fff;
+}
+.lista-editoriales {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.editorial-card {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+}
+.editorial-info {
+  font-size: 1.1rem;
+}
+.ciudad {
+  color: #888;
+  font-size: 0.95rem;
+}
+.editorial-actions button {
+  margin-left: 0.5rem;
+  padding: 0.3rem 0.8rem;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-editar {
+  background: #ffb300;
+  color: #fff;
+}
+.btn-editar:hover {
+  background: #c68400;
+}
+.btn-eliminar {
+  background: #e53935;
+  color: #fff;
+}
+.btn-eliminar:hover {
+  background: #ab000d;
+}
+.sin-editoriales {
+  color: #888;
+  text-align: center;
+  padding: 1rem;
+}
+@media (max-width: 700px) {
+  .modal-content.modal-material {
+    max-width: 98vw;
+    padding: 1.2rem 0.5rem 1rem 0.5rem;
+    border-radius: 10px;
+  }
+  .form-editorial-modal {
+    padding: 1rem 0.5rem 0.5rem 0.5rem;
+  }
+  .form-row, .form-row.form-row-right {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: stretch;
+  }
+  .lista-editoriales {
+    padding: 0 0.2rem;
+  }
+  .editorial-card {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0.7rem;
+  }
+  .editorial-actions button {
+    width: 100%;
+    margin: 0.2rem 0;
+    font-size: 1rem;
+    padding: 0.5rem 0;
+  }
+}
+@media (max-width: 480px) {
+  .modal-content.modal-material {
+    padding: 0.7rem 0.2rem 0.5rem 0.2rem;
+  }
+  .form-editorial-modal input {
+    font-size: 0.98rem;
+    padding: 0.5rem 0.7rem;
+  }
+  .modal-title {
+    font-size: 1.1rem;
+  }
+}
+</style>

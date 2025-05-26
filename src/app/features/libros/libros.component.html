@@ -1,0 +1,441 @@
+<h2>Gestión de Libros</h2>
+
+<button class="btn-nuevo" (click)="mostrarModal = true">Nuevo Libro</button>
+
+<div class="modal" *ngIf="mostrarModal">
+  <div class="modal-content">
+    <h3 class="modal-title">Nuevo Libro</h3>
+    <span class="close" (click)="mostrarModal = false">&times;</span>
+    <form (ngSubmit)="agregar(); mostrarModal = false" class="form-libro">
+      <div class="form-row">
+        <input [(ngModel)]="nuevoLibro().nombre" name="nombre" placeholder="Nombre" required />
+        <input [(ngModel)]="nuevoLibro().autor" name="autor" placeholder="Autor" required />
+      </div>  
+      <div class="form-row">
+        <input [(ngModel)]="nuevoLibro().edicion" name="edicion" placeholder="Edición" required />
+        <input [(ngModel)]="nuevoLibro().ejemplar" name="ejemplar" type="number" min="1" required placeholder="Ejemplar" />
+      </div>
+      <div class="form-row">
+        <textarea [(ngModel)]="nuevoLibro().descripcion" name="descripcion" placeholder="Descripción" required></textarea>
+      </div>
+      <div class="form-row">
+        <label>
+          Activo:
+          <input type="checkbox" [(ngModel)]="nuevoLibro().activo" name="activo" />
+        </label>
+        <label>
+          Eliminado:
+          <input type="checkbox" [(ngModel)]="nuevoLibro().eliminado" name="eliminado" />
+        </label>        
+      </div>
+      <div class="form-row form-row-right">
+        <button class="btn-guardar" type="submit">Guardar</button>
+        <button class="btn-cancelar" type="button" (click)="mostrarModal = false">Cancelar</button>
+      </div>      
+    </form>
+  </div>
+</div>
+
+<table class="tabla-libros">
+  <thead>
+    <tr>
+      <th>Nombre</th>
+      <th>Autor</th>
+      <th>Edición</th>
+      <th>Ejemplar</th>
+      <th>Descripción</th>
+      <th>Activo</th>
+      <th>Eliminado</th>
+      <th>Acciones</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let libro of librosPaginados; trackBy: trackId" class="libro-row">
+      <td>{{ libro.nombre }}</td>
+      <td>{{ libro.autor }}</td>
+      <td>{{ libro.edicion }}</td>
+      <td>{{ libro.ejemplar }}</td>
+      <td>{{ libro.descripcion }}</td>
+      <td>
+        <span [class.activo-chip]="libro.activo" [class.inactivo-chip]="!libro.activo">
+          {{ libro.activo ? 'Sí' : 'No' }}
+        </span>
+      </td>
+      <td>
+        <span [class.eliminado-chip]="libro.eliminado" [class.noeliminado-chip]="!libro.eliminado">
+          {{ libro.eliminado ? 'Sí' : 'No' }}
+        </span>
+      </td>
+      <td>
+        <button class="btn-editar" (click)="iniciarEdicion(libro)">Editar</button>
+        <button class="btn-eliminar" (click)="eliminar(libro.id)">Eliminar</button>
+      </td>
+    </tr>
+    <tr *ngIf="libros().length === 0">
+      <td colspan="8">No hay libros cargados.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="paginacion">
+  <button (click)="cambiarPagina(-1)" [disabled]="paginaActual === 1">Anterior</button>
+  <span>Página {{ paginaActual }} de {{ totalPaginas }}</span>
+  <button (click)="cambiarPagina(1)" [disabled]="paginaActual === totalPaginas">Siguiente</button>
+</div>
+
+<div class="modal" *ngIf="editandoId !== null">
+  <div class="modal-content">
+    <h3 class="modal-title">Editar Libro</h3>
+    <span class="close" (click)="cancelarEdicion()">&times;</span>
+    <form (ngSubmit)="guardarEdicion(); cancelarEdicion()" class="form-libro">
+      <div class="form-row">
+        <input [(ngModel)]="libroEditado().nombre" name="editNombre" placeholder="Nombre" required />
+        <input [(ngModel)]="libroEditado().autor" name="editAutor" placeholder="Autor" required />
+      </div>
+      <div class="form-row">
+        <input [(ngModel)]="libroEditado().edicion" name="editEdicion" placeholder="Edición" required />
+        <input [(ngModel)]="libroEditado().ejemplar" name="editEjemplar" type="number" min="1" required placeholder="Ejemplar" />
+      </div>
+      <div class="form-row">
+        <textarea [(ngModel)]="libroEditado().descripcion" name="editDescripcion" placeholder="Descripción" required></textarea>
+      </div>
+      <div class="form-row">
+        <label>
+          Activo:
+          <input type="checkbox" [(ngModel)]="libroEditado().activo" name="editActivo" />
+        </label>
+        <label>
+          Eliminado:
+          <input type="checkbox" [(ngModel)]="libroEditado().eliminado" name="editEliminado" />
+        </label>
+      </div>
+      <div class="form-row form-row-right">
+        <button class="btn-guardar" type="submit">Guardar</button>
+        <button class="btn-cancelar" type="button" (click)="cancelarEdicion()">Cancelar</button>
+      </div> 
+    </form>
+  </div>
+</div>
+
+<div class="modal" *ngIf="confirmarEliminarId !== null">
+  <div class="modal-content">
+    <h3 class="modal-title">¿Confirmar eliminación?</h3>
+    <p>¿Estás seguro de que deseas eliminar este libro?</p>
+    <div class="form-row form-row-right">
+      <button class="btn-eliminar" (click)="confirmarEliminar()">Sí, eliminar</button>
+      <button class="btn-cancelar" (click)="cancelarEliminar()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<style>
+.btn-nuevo {
+  background: #43a047;
+  color: #fff;
+  border: none;
+  padding: 0.6rem 1.3rem;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 500;
+  margin-bottom: 1.2rem;
+  font-size: 1.1rem;
+  transition: background 0.2s;
+}
+.btn-nuevo:hover {
+  background: #2e7031;
+}
+.modal {
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: auto;
+  background: rgba(0,0,0,0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.modal-content {
+  background: #fff;
+  margin: auto;
+  padding: 2rem 1.5rem 1.5rem 1.5rem;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 600px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.13);
+  position: relative;
+}
+.close {
+  color: #888;
+  position: absolute;
+  top: 1rem;
+  right: 1.2rem;
+  font-size: 2rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.close:hover {
+  color: #e53935;
+}
+.form-libro {
+  margin-bottom: 1.5rem;
+  background: #f8f8f8;
+  padding: 1.5rem 1rem 1rem 1rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.form-row-right {
+  justify-content: flex-end;
+}
+.form-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 0.7rem;
+}
+.form-libro input, .form-libro textarea {
+  padding: 0.7rem 1rem;
+  border: 1.5px solid #bdbdbd;
+  border-radius: 8px;
+  font-size: 1.08rem;
+  flex: 1;
+  background: #f9f9fb;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+}
+.form-libro input:focus, .form-libro textarea:focus {
+  border-color: #1976d2;
+  background: #fff;
+  box-shadow: 0 0 0 2px #1976d233;
+}
+.form-libro input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin-right: 0.4rem;
+  accent-color: #1976d2;
+  box-shadow: none;
+  border-radius: 4px;
+}
+.form-row label {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 1rem;
+  color: #444;
+}
+.form-row {
+  gap: 1.2rem;
+}
+.form-libro textarea {
+  min-height: 150px;
+  resize: vertical;
+}
+.form-libro button {
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1.2rem;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+.form-libro button:hover {
+  background: #125ea2;
+}
+.tabla-libros {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-top: 1rem;
+  background: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.tabla-libros th, .tabla-libros td {
+  border-bottom: 1px solid #e0e0e0;
+  padding: 0.7rem 0.5rem;
+  text-align: left;
+}
+.tabla-libros th {
+  background: #1976d2;
+  color: #fff;
+  font-weight: 600;
+}
+.libro-row:hover {
+  background: #f1f7ff;
+  transition: background 0.2s;
+}
+.btn-eliminar {
+  background: #e53935;
+  color: #fff;
+  border: none;
+  padding: 0.3rem 0.9rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: background 0.2s;
+  margin-right: 0.3rem;
+}
+.btn-eliminar:hover {
+  background: #ab000d;
+}
+.btn-editar {
+  background: #ffb300;
+  color: #fff;
+  border: none;
+  padding: 0.3rem 0.9rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: background 0.2s;
+  margin-right: 0.3rem;
+}
+.btn-editar:hover {
+  background: #c68400;
+}
+.btn-guardar {
+  background: #43a047;
+  color: #fff;
+  border: none;
+  padding: 0.3rem 0.9rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: background 0.2s;
+  margin-right: 0.3rem;
+}
+.btn-guardar:hover {
+  background: #2e7031;
+}
+.btn-cancelar {
+  background: #bdbdbd;
+  color: #333;
+  border: none;
+  padding: 0.3rem 0.9rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: background 0.2s;
+}
+.btn-cancelar:hover {
+  background: #757575;
+  color: #fff;
+}
+.activo-chip {
+  background: #43a047;
+  color: #fff;
+  padding: 0.2rem 0.7rem;
+  border-radius: 12px;
+  font-size: 0.95rem;
+}
+.inactivo-chip {
+  background: #bdbdbd;
+  color: #333;
+  padding: 0.2rem 0.7rem;
+  border-radius: 12px;
+  font-size: 0.95rem;
+}
+.eliminado-chip {
+  background: #e53935;
+  color: #fff;
+  padding: 0.2rem 0.7rem;
+  border-radius: 12px;
+  font-size: 0.95rem;
+}
+.noeliminado-chip {
+  background: #43a047;
+  color: #fff;
+  padding: 0.2rem 0.7rem;
+  border-radius: 12px;
+  font-size: 0.95rem;
+}
+.modal-title {
+  margin-top: 0;
+  margin-bottom: 1.2rem;
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: #1976d2;
+  text-align: center;
+}
+.paginacion {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1.2rem;
+  margin: 1.5rem 0 0.5rem 0;
+}
+.paginacion button {
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  padding: 0.4rem 1.1rem;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 1rem;
+  transition: background 0.2s;
+}
+.paginacion button:disabled {
+  background: #bdbdbd;
+  color: #fff;
+  cursor: not-allowed;
+}
+.paginacion span {
+  font-size: 1.08rem;
+  color: #1976d2;
+  font-weight: 500;
+}
+@media (max-width: 700px) {
+  .modal-content, .modal-content.modal-material {
+    max-width: 98vw;
+    padding: 1.2rem 0.5rem 1rem 0.5rem;
+    border-radius: 10px;
+  }
+  .form-libro, .form-editorial-modal {
+    padding: 1rem 0.5rem 0.5rem 0.5rem;
+  }
+  .form-row, .form-row.form-row-right {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: stretch;
+  }
+  .tabla-libros {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    border-radius: 0;
+  }
+  .tabla-libros th, .tabla-libros td {
+    white-space: nowrap;
+    font-size: 0.98rem;
+    padding: 0.5rem 0.3rem;
+  }
+  .btn-nuevo, .btn-guardar, .btn-cancelar, .btn-editar, .btn-eliminar {
+    width: 100%;
+    margin: 0.2rem 0;
+    font-size: 1rem;
+    padding: 0.5rem 0;
+  }
+  .paginacion {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+@media (max-width: 480px) {
+  .modal-content, .modal-content.modal-material {
+    padding: 0.7rem 0.2rem 0.5rem 0.2rem;
+  }
+  .form-libro input, .form-libro textarea, .form-editorial-modal input {
+    font-size: 0.98rem;
+    padding: 0.5rem 0.7rem;
+  }
+  .modal-title {
+    font-size: 1.1rem;
+  }
+}
+</style>
